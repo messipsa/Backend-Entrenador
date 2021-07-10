@@ -106,6 +106,11 @@ module.exports.follow = async(req , res) =>
     {
         return res.status(400).send('ID Unknown : ' + req.params.id);
     }
+
+    if(!ObjectID.isValid(req.body.idToFollow))
+    {
+        return res.status(400).send('ID To Follow Unknown : ' + req.body.idToFollow);
+    }
     
     try
     {
@@ -127,6 +132,20 @@ module.exports.follow = async(req , res) =>
                 return res.status(400).json({message : err});
             }
         }    
+           );
+
+           await UserModel.findByIdAndUpdate(
+               req.body.idToFollow,
+               {$addToSet : {followers : req.params.id}},
+               {
+                new : true,
+               upsert : true 
+               },
+
+               (err ,data)=>
+               {
+                   if(err) return res.status(400).json(err);
+               }
            )
     }
     catch(err)
@@ -134,3 +153,61 @@ module.exports.follow = async(req , res) =>
         return res.status(500).json({message : err});
     }
 }
+
+
+
+module.exports.unfollow = async(req , res) =>
+{
+    if(!ObjectID.isValid(req.params.id))
+    {
+        return res.status(400).send('ID Unknown : ' + req.params.id);
+    }
+
+    if(!ObjectID.isValid(req.body.idToUnFollow))
+    {
+        return res.status(400).send('ID To Unfollow Unknown : ' + req.body.idToUnFollow);
+    }
+    
+    try
+    {
+       await UserModel.findByIdAndUpdate(
+           req.params.id,
+           {$pull : {following : req.body.idToUnFollow} },
+            {
+                new : true,
+            upsert : true 
+            },
+        (err,data)=>
+        {
+            if(!err)
+            {
+                 res.status(201).json(data);
+            }
+            else
+            {
+                return res.status(400).json({message : err});
+            }
+        }    
+           );
+
+           await UserModel.findByIdAndUpdate(
+               req.body.idToUnFollow,
+               {$pull : {followers : req.params.id}},
+               {
+                new : true,
+               upsert : true 
+               },
+
+               (err ,data)=>
+               {
+                   if(err) return res.status(400).json(err);
+               }
+           )
+    }
+    catch(err)
+    {
+        return res.status(500).json({message : err});
+    }
+}
+
+
