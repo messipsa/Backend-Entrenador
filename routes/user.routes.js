@@ -6,6 +6,10 @@ const userController = require('../controllers/user.controller');
 //auth
 router.post('/register' , authController.signUp);
 
+router.post('/login' ,  authController.SignIn);
+
+//router.get('/logout' , authController.logout);
+
 //user display
 router.get('/' , userController.getAllUsers);
 
